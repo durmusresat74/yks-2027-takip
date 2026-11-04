@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>YKS 2027 • Çalışma Takip</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b1020;--panel:#141c30;--panel2:#1a2540;--text:#eef3ff;--muted:#9ba9c4;--line:#293653;--accent:#8b9cff;--accent2:#5eead4;--red:#fb7185;--yellow:#fbbf24;--shadow:0 12px 32px #0003}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top left,#182445 0,#0b1020 42%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:#101629;font-weight:700}
+button.secondary{background:#263451;color:var(--text);border:1px solid var(--line)}button.danger{background:#512534;color:#ffdce3}
+header{position:sticky;top:0;z-index:5;background:#0b1020eF;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top{max-width:1250px;margin:auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{font-weight:850;letter-spacing:.2px;font-size:18px}.brand span{color:var(--accent2)}
+nav{max-width:1250px;margin:auto;padding:0 16px 12px;display:flex;gap:8px;overflow:auto}
+nav button{white-space:nowrap;background:transparent;color:var(--muted);border:1px solid transparent;padding:8px 12px}nav button.active{background:var(--panel2);color:var(--text);border-color:var(--line)}
+main{max-width:1250px;margin:24px auto;padding:0 20px 60px}.view{display:none}.view.active{display:block}
+h1{font-size:26px;margin:0 0 5px}h2{font-size:18px;margin:0 0 14px}p.sub{margin:0 0 22px;color:var(--muted)}
+.grid{display:grid;gap:14px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin:18px 0}.two{grid-template-columns:1.2fr .8fr}.three{grid-template-columns:repeat(3,1fr)}
+.card{background:linear-gradient(145deg,#17223a,#111a2d);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.kicker{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.value{font-size:30px;font-weight:850;margin-top:4px}.small{font-size:12px;color:var(--muted)}
+.countdown{display:flex;align-items:center;justify-content:space-between;gap:16px}.countdown strong{font-size:36px;color:var(--accent2)}.countdown .date{color:var(--muted);font-size:13px}
+.progress{height:9px;border-radius:99px;background:#293653;overflow:hidden;margin:10px 0}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:20px 0 12px}.section-head h2{margin:0}
+form .fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
+input,select{width:100%;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:#0d1629;color:var(--text);outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.toolbar{display:flex;gap:8px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}td.num{text-align:right;font-variant-numeric:tabular-nums}
+.table-wrap{overflow:auto}.empty{padding:25px;text-align:center;color:var(--muted)}
+.record{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid var(--line);padding:12px 0}.record:last-child{border:0}
+.menu{position:relative}.dots{background:#263451;color:white;padding:6px 10px}.menu-pop{display:none;position:absolute;right:0;top:38px;z-index:3;background:#202d48;border:1px solid var(--line);border-radius:12px;padding:6px;min-width:120px;box-shadow:var(--shadow)}.menu-pop.show{display:block}.menu-pop button{display:block;width:100%;text-align:left;background:transparent;color:var(--text);font-weight:500;padding:8px}
+.pill{display:inline-block;padding:3px 8px;border-radius:99px;background:#263451;color:#cbd7f1;font-size:11px}
+canvas{width:100%;height:220px;display:block}
+.notice{padding:12px 14px;border-radius:12px;background:#2c2a1b;border:1px solid #5a4a22;color:#f8e6ad;font-size:13px;margin:12px 0}
+.modal{display:none;position:fixed;inset:0;background:#030712bb;z-index:20;align-items:center;justify-content:center;padding:16px}.modal.open{display:flex}.modal-box{width:min(620px,100%);max-height:90vh;overflow:auto;background:#141e33;border:1px solid var(--line);border-radius:18px;padding:20px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:24px}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}.two,.three{grid-template-columns:1fr}form .fields{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){main{padding:0 13px 40px}.top{padding:12px 14px}.stats{gap:9px}.card{padding:14px}.value{font-size:25px}form .fields{grid-template-columns:1fr}.countdown strong{font-size:30px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="top"><div class="brand">YKS <span>2027</span> · Takip Paneli</div><div class="toolbar"><button class="secondary" id="themeBtn">Tema</button></div></div>
+ <nav id="nav">
+  <button class="active" data-view="home">Genel Bakış</button><button data-view="daily">Günlük Takip</button><button data-view="exams">Denemeler</button><button data-view="stats">İstatistikler</button><button data-view="calendar">Takvim</button><button data-view="settings">Ayarlar</button>
+ </nav>
+</header>
+<main>
+<section class="view active" id="home">
+ <h1>Çalışma merkezim</h1><p class="sub">Bugünkü emeğini kaydet, gelişimini takip et. Her soru bir adım. ✨</p>
+ <div class="card countdown"><div><div class="kicker">2027 YKS'ye kalan</div><strong id="daysLeft">—</strong><div class="date" id="examDateLabel">Sınav tarihi ayarlardan düzenlenebilir</div></div><div style="font-size:42px">🎯</div></div>
+ <div class="grid stats">
+  <div class="card"><div class="kicker">Bugünkü soru</div><div class="value" id="todayQ">0</div><div class="small">Toplam çözülen</div></div>
+  <div class="card"><div class="kicker">Bugünkü net</div><div class="value" id="todayNet">0,00</div><div class="small">Doğru − yanlış / 4</div></div>
+  <div class="card"><div class="kicker">Bugünkü doğru</div><div class="value" id="todayCorrect">0</div><div class="small">Tüm dersler</div></div>
+  <div class="card"><div class="kicker">Bugünkü yanlış</div><div class="value" id="todayWrong">0</div><div class="small">Tüm dersler</div></div>
+ </div>
+ <div class="grid two">
+  <div class="card"><div class="section-head"><h2>Son 7 gün · soru sayısı</h2><span class="pill">Günlük</span></div><canvas id="weekChart" width="700" height="220"></canvas></div>
+  <div class="card"><h2>Günlük hedef</h2><div class="value" id="goalProgressText">0 / 150</div><div class="progress"><i id="goalProgress" style="width:0%"></i></div><div class="small">Hedefini Ayarlar bölümünden değiştirebilirsin.</div><div class="section-head"><h2>Bu hafta</h2></div><div class="value" id="weekTotal">0</div><div class="small">Çözülen toplam soru</div></div>
+ </div>
+ <div class="card" style="margin-top:14px"><div class="section-head"><h2>Son kayıtlar</h2><button class="secondary" onclick="showView('daily')">Tümünü gör</button></div><div id="recentRecords"></div></div>
+</section>
+
+<section class="view" id="daily">
+ <h1>Günlük soru takibi</h1><p class="sub">Ders seç, doğru ve yanlışlarını gir; netin otomatik hesaplansın.</p>
+ <div class="card">
+  <h2 id="dailyFormTitle">Yeni günlük kayıt</h2>
+  <form id="dailyForm"><input type="hidden" id="dailyId"><div class="fields">
+   <div><label>Tarih</label><input type="date" id="dailyDate" required></div>
+   <div><label>Alan</label><select id="dailyScope"><option>TYT</option><option>AYT</option></select></div>
+   <div><label>Ders</label><select id="dailySubject"></select></div>
+   <div><label>Doğru</label><input type="number" id="dailyCorrect" min="0" value="0" required></div>
+   <div><label>Yanlış</label><input type="number" id="dailyWrong" min="0" value="0" required></div>
+   <div><label>Boş (isteğe bağlı)</label><input type="number" id="dailyBlank" min="0" value="0"></div>
+  </div><div class="actions"><button type="submit">Kaydet</button><button type="button" class="secondary" id="dailyCancel">Temizle / Vazgeç</button></div></form>
+ </div>
+ <div class="section-head"><h2>Kayıt geçmişi</h2><input style="max-width:190px" type="date" id="dailyFilter"></div>
+ <div class="card table-wrap"><table><thead><tr><th>Tarih</th><th>Alan</th><th>Ders</th><th class="num">D</th><th class="num">Y</th><th class="num">B</th><th class="num">Net</th><th></th></tr></thead><tbody id="dailyRows"></tbody></table></div>
+</section>
+
+<section class="view" id="exams">
+ <h1>Deneme takip</h1><p class="sub">TYT, AYT, SOS-1 ve SOS-2 sonuçlarını ayrı ayrı kaydet ve karşılaştır.</p>
+ <div class="notice">ÖSYM soru dağılımları yılın kılavuzuna göre kontrol edilmelidir. Aşağıdaki test yapısı düzenlenebilir; 2027 kılavuzu yayımlandığında Ayarlar bölümünden güncelleyebilirsin.</div>
+ <div class="card"><h2 id="examFormTitle">Yeni deneme ekle</h2>
+ <form id="examForm"><input type="hidden" id="examId"><div class="fields">
+  <div><label>Deneme tarihi</label><input type="date" id="examDate" required></div>
+  <div><label>Deneme türü</label><select id="examType"><option>TYT</option><option>AYT</option><option>SOS-1</option><option>SOS-2</option></select></div>
+  <div><label>Deneme / yayın adı</label><input id="examName" placeholder="Örn. 3D Türkiye Geneli" required></div>
+  <div><label>Yayın (isteğe bağlı)</label><input id="examPublisher" placeholder="Yayınevi"></div>
+  <div><label>Süre (dakika)</label><input type="number" id="examDuration" min="0" placeholder="165"></div>
+  <div><label>Sıralama (isteğe bağlı)</label><input type="number" id="examRank" min="1" placeholder="—"></div>
+ </div><div id="examSubjects" class="fields" style="margin-top:14px"></div>
+ <div class="actions"><button type="submit">Denemeyi kaydet</button><button type="button" class="secondary" id="examCancel">Temizle / Vazgeç</button></div></form></div>
+ <div class="section-head"><h2>Deneme geçmişi</h2><select id="examFilter" style="max-width:160px"><option value="">Tüm türler</option><option>TYT</option><option>AYT</option><option>SOS-1</option><option>SOS-2</option></select></div>
+ <div class="card" id="examRows"></div>
+</section>
+
+<section class="view" id="stats">
+ <h1>İstatistikler</h1><p class="sub">Çalışma verilerinin zaman içindeki değişimini incele.</p>
+ <div class="grid stats">
+  <div class="card"><div class="kicker">Toplam soru</div><div class="value" id="allQ">0</div></div>
+  <div class="card"><div class="kicker">Toplam net</div><div class="value" id="allNet">0,00</div></div>
+  <div class="card"><div class="kicker">Günlük kayıt</div><div class="value" id="recordDays">0</div></div>
+  <div class="card"><div class="kicker">Deneme sayısı</div><div class="value" id="examCount">0</div></div>
+ </div>
+ <div class="grid two">
+  <div class="card"><h2>Derslere göre toplam soru</h2><div id="subjectStats"></div></div>
+  <div class="card"><h2>Deneme net gelişimi</h2><canvas id="examChart" width="700" height="250"></canvas></div>
+ </div>
+</section>
+
+<section class="view" id="calendar">
+ <h1>Takvim</h1><p class="sub">Bir günü seçerek o güne ait soru kayıtlarını görüntüle.</p>
+ <div class="card"><div class="toolbar" style="justify-content:space-between;align-items:center"><button class="secondary" id="prevMonth">← Önceki</button><h2 id="monthTitle" style="margin:0"></h2><button class="secondary" id="nextMonth">Sonraki →</button></div><div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:16px"></div><div id="calendarDetail" style="margin-top:18px"></div></div>
+</section>
+
+<section class="view" id="settings">
+ <h1>Ayarlar ve yedekleme</h1><p class="sub">Hedeflerini, sınav tarihini ve verilerini yönet.</p>
+ <div class="grid two">
+  <div class="card"><h2>Çalışma hedefleri</h2><label>Günlük soru hedefi</label><input type="number" id="goalInput" min="1" value="150"><label style="margin-top:12px">2027 YKS tarihi</label><input type="date" id="dateInput"><div class="actions"><button id="saveSettings">Ayarları kaydet</button></div><div class="small" style="margin-top:8px">Sınav tarihi kesinleştiğinde buradan güncelleyebilirsin.</div></div>
+  <div class="card"><h2>Veri güvenliği</h2><p class="small">Kayıtlar bu tarayıcıda cihazına kaydedilir. Tarayıcı verilerini temizlemeden önce yedek al.</p><div class="actions"><button id="exportBtn">JSON yedeği indir</button><button class="secondary" id="csvBtn">CSV dışa aktar</button></div><label style="margin-top:16px">Yedek dosyasını geri yükle</label><input type="file" id="importFile" accept=".json,application/json"><div class="actions"><button class="danger" id="clearAll">Tüm verileri sil</button></div></div>
+ </div>
+</section>
+<footer>YKS 2027 Çalışma Takip · Verilerin cihazında saklanır</footer>
+</main>
+<div class="modal" id="confirmModal"><div class="modal-box"><h2>Kaydı silmek istiyor musun?</h2><p class="small">Bu işlem geri alınamaz. Devam etmeden önce emin ol.</p><div class="actions"><button class="danger" id="confirmDelete">Evet, sil</button><button class="secondary" id="cancelDelete">Vazgeç</button></div></div></div>
+<script src="app.js"></script>
+</body></html>
