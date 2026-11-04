@@ -1,0 +1,73 @@
+const $=id=>document.getElementById(id);
+const STORE='yks2027_data_v1';
+const subjects={
+ TYT:['Türkçe','Matematik','Geometri','Tarih','Coğrafya','Felsefe','Din Kültürü','Fizik','Kimya','Biyoloji'],
+ AYT:['Türk Dili ve Edebiyatı','Tarih-1','Coğrafya-1','Tarih-2','Coğrafya-2','Felsefe Grubu','Din Kültürü']
+};
+const examSubjects={
+ 'TYT':['Türkçe','Sosyal Bilimler','Matematik','Fen Bilimleri'],
+ 'AYT':['Türk Dili ve Edebiyatı','Tarih-1','Coğrafya-1','Tarih-2','Coğrafya-2','Felsefe Grubu','Din Kültürü'],
+ 'SOS-1':['Türk Dili ve Edebiyatı','Tarih-1','Coğrafya-1'],
+ 'SOS-2':['Tarih-2','Coğrafya-2','Felsefe Grubu','Din Kültürü']
+};
+let data=load(), deleteTarget=null, calDate=new Date();
+function load(){try{return JSON.parse(localStorage.getItem(STORE))||{daily:[],exams:[],goal:150,examDate:'2027-06-20'}}catch{return {daily:[],exams:[],goal:150,examDate:'2027-06-20'}}}
+function save(){localStorage.setItem(STORE,JSON.stringify(data));renderAll()}
+function today(){return new Date().toISOString().slice(0,10)}
+function n(v){return Math.max(0,Number(v)||0)}
+function net(c,w){return c-w/4}
+function fmt(v){return Number(v||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function total(arr,key){return arr.reduce((s,x)=>s+n(x[key]),0)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function showView(id){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.view===id));if(id==='calendar')renderCalendar();if(id==='stats')renderStats()}
+window.showView=showView;
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+function fillDailySubjects(){let scope=$('dailyScope').value; $('dailySubject').innerHTML=subjects[scope].map(s=>`<option>${s}</option>`).join('')}
+$('dailyScope').onchange=fillDailySubjects;fillDailySubjects();
+$('dailyDate').value=today();$('examDate').value=today();
+function resetDaily(){$('dailyId').value='';$('dailyFormTitle').textContent='Yeni günlük kayıt';$('dailyDate').value=today();$('dailyScope').value='TYT';fillDailySubjects();$('dailyCorrect').value=0;$('dailyWrong').value=0;$('dailyBlank').value=0}
+$('dailyCancel').onclick=resetDaily;
+$('dailyForm').onsubmit=e=>{e.preventDefault();let id=$('dailyId').value,scope=$('dailyScope').value,subject=$('dailySubject').value,c=n($('dailyCorrect').value),w=n($('dailyWrong').value),b=n($('dailyBlank').value);if(c+w+b<1){alert('En az bir soru sayısı girmelisin.');return}let rec={id:id||crypto.randomUUID(),date:$('dailyDate').value,scope,subject,correct:c,wrong:w,blank:b};if(id)data.daily=data.daily.map(x=>x.id===id?rec:x);else data.daily.push(rec);save();resetDaily();};
+function editDaily(id){let x=data.daily.find(r=>r.id===id);if(!x)return;showView('daily');$('dailyId').value=x.id;$('dailyFormTitle').textContent='Günlük kaydı düzenle';$('dailyDate').value=x.date;$('dailyScope').value=x.scope;fillDailySubjects();$('dailySubject').value=x.subject;$('dailyCorrect').value=x.correct;$('dailyWrong').value=x.wrong;$('dailyBlank').value=x.blank;window.scrollTo({top:0,behavior:'smooth'})}
+function askDelete(type,id){deleteTarget={type,id};$('confirmModal').classList.add('open')}
+$('cancelDelete').onclick=()=>$('confirmModal').classList.remove('open');
+$('confirmDelete').onclick=()=>{if(deleteTarget){if(deleteTarget.type==='daily')data.daily=data.daily.filter(x=>x.id!==deleteTarget.id);else data.exams=data.exams.filter(x=>x.id!==deleteTarget.id);save()}deleteTarget=null;$('confirmModal').classList.remove('open')};
+function menu(type,id){return `<div class="menu"><button class="dots" onclick="this.nextElementSibling.classList.toggle('show')">⋮</button><div class="menu-pop"><button onclick="${type==='daily'?'editDaily':'editExam'}('${id}')">Düzenle</button><button onclick="askDelete('${type}','${id}')">Sil</button></div></div>`}
+window.editDaily=editDaily;window.askDelete=askDelete;
+function renderDaily(){let list=[...data.daily].sort((a,b)=>b.date.localeCompare(a.date));let f=$('dailyFilter').value;if(f)list=list.filter(x=>x.date===f);$('dailyRows').innerHTML=list.length?list.map(x=>`<tr><td>${x.date}</td><td>${x.scope}</td><td>${esc(x.subject)}</td><td class="num">${x.correct}</td><td class="num">${x.wrong}</td><td class="num">${x.blank}</td><td class="num">${fmt(net(x.correct,x.wrong))}</td><td>${menu('daily',x.id)}</td></tr>`).join(''):`<tr><td colspan="8" class="empty">Henüz kayıt yok.</td></tr>`}
+$('dailyFilter').onchange=renderDaily;
+function makeExamFields(type){$('examSubjects').innerHTML=examSubjects[type].map((s,i)=>`<div class="card" style="padding:10px;background:#101a2e"><label>${s} · Doğru</label><input type="number" min="0" value="0" id="ec${i}"><label style="margin-top:7px">${s} · Yanlış</label><input type="number" min="0" value="0" id="ew${i}"><label style="margin-top:7px">${s} · Boş</label><input type="number" min="0" value="0" id="eb${i}"></div>`).join('')}
+$('examType').onchange=()=>makeExamFields($('examType').value);makeExamFields('TYT');
+function resetExam(){$('examId').value='';$('examFormTitle').textContent='Yeni deneme ekle';$('examDate').value=today();$('examType').value='TYT';$('examName').value='';$('examPublisher').value='';$('examDuration').value='';$('examRank').value='';makeExamFields('TYT')}
+$('examCancel').onclick=resetExam;
+$('examForm').onsubmit=e=>{e.preventDefault();let type=$('examType').value,arr=examSubjects[type].map((s,i)=>({subject:s,correct:n($('ec'+i).value),wrong:n($('ew'+i).value),blank:n($('eb'+i).value)}));let id=$('examId').value;let rec={id:id||crypto.randomUUID(),date:$('examDate').value,type,name:$('examName').value.trim(),publisher:$('examPublisher').value,duration:n($('examDuration').value),rank:n($('examRank').value)||null,results:arr};if(arr.every(x=>x.correct+x.wrong+x.blank===0)){alert('En az bir ders için sonuç girmelisin.');return}if(id)data.exams=data.exams.map(x=>x.id===id?rec:x);else data.exams.push(rec);save();resetExam()};
+function examNet(x){return x.results.reduce((s,r)=>s+net(r.correct,r.wrong),0)}
+function editExam(id){let x=data.exams.find(r=>r.id===id);if(!x)return;showView('exams');$('examId').value=x.id;$('examFormTitle').textContent='Denemeyi düzenle';$('examDate').value=x.date;$('examType').value=x.type;makeExamFields(x.type);$('examName').value=x.name;$('examPublisher').value=x.publisher||'';$('examDuration').value=x.duration||'';$('examRank').value=x.rank||'';x.results.forEach((r,i)=>{if($('ec'+i)){$('ec'+i).value=r.correct;$('ew'+i).value=r.wrong;$('eb'+i).value=r.blank}});window.scrollTo({top:0,behavior:'smooth'})}
+window.editExam=editExam;
+function renderExams(){let f=$('examFilter').value,list=[...data.exams].sort((a,b)=>b.date.localeCompare(a.date));if(f)list=list.filter(x=>x.type===f);$('examRows').innerHTML=list.length?list.map(x=>`<div class="record"><div><div><b>${esc(x.name)}</b> <span class="pill">${x.type}</span></div><div class="small">${x.date} · ${esc(x.publisher||'Yayın belirtilmedi')} · ${x.duration?x.duration+' dk · ':''}${x.rank?'Sıralama: '+x.rank:''}</div><div style="margin-top:4px">Toplam net: <b>${fmt(examNet(x))}</b></div><div class="small">${x.results.map(r=>`${esc(r.subject)}: ${fmt(net(r.correct,r.wrong))}`).join(' · ')}</div></div>${menu('exam',x.id)}</div>`).join(''):'<div class="empty">Henüz deneme eklenmedi.</div>'}
+$('examFilter').onchange=renderExams;
+function dailyFor(date){return data.daily.filter(x=>x.date===date)}
+function sumFor(arr,key){return arr.reduce((s,x)=>s+n(x[key]),0)}
+function renderHome(){let t=dailyFor(today()),q=sumFor(t,'correct')+sumFor(t,'wrong')+sumFor(t,'blank'),c=sumFor(t,'correct'),w=sumFor(t,'wrong'),nt=net(c,w);$('todayQ').textContent=q;$('todayNet').textContent=fmt(nt);$('todayCorrect').textContent=c;$('todayWrong').textContent=w;
+ let goal=n(data.goal)||150,p=Math.min(100,q/goal*100);$('goalProgressText').textContent=`${q} / ${goal}`;$('goalProgress').style.width=p+'%';
+ let d=new Date(data.examDate+'T00:00:00'),days=Math.ceil((d-new Date(new Date().toDateString()))/86400000);$('daysLeft').textContent=days>=0?days+' gün':Math.abs(days)+' gün geçti';$('examDateLabel').textContent='Sınav tarihi: '+data.examDate;
+ let week=0,chart=[];for(let i=6;i>=0;i--){let dt=new Date();dt.setDate(dt.getDate()-i);let key=dt.toISOString().slice(0,10),a=dailyFor(key),v=sumFor(a,'correct')+sumFor(a,'wrong')+sumFor(a,'blank');week+=v;chart.push({label:dt.toLocaleDateString('tr-TR',{weekday:'short'}),v})}$('weekTotal').textContent=week;drawBars($('weekChart'),chart);
+ let recent=[...data.daily].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);$('recentRecords').innerHTML=recent.length?recent.map(x=>`<div class="record"><div><b>${esc(x.subject)}</b><div class="small">${x.date} · ${x.scope} · ${x.correct}D ${x.wrong}Y ${x.blank}B</div></div><b>${fmt(net(x.correct,x.wrong))} net</b></div>`).join(''):'<div class="empty">İlk soru kaydını eklediğinde burada görünecek.</div>'}
+function drawBars(canvas,items){let ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);let max=Math.max(10,...items.map(x=>x.v)),pad=35,bw=(w-pad*2)/items.length;ctx.font='13px system-ui';items.forEach((it,i)=>{let bh=(h-55)*it.v/max,x=pad+i*bw+bw*.2,y=h-35-bh;ctx.fillStyle='#8798ff';ctx.beginPath();ctx.roundRect(x,y,bw*.6,bh,7);ctx.fill();ctx.fillStyle='#9ba9c4';ctx.textAlign='center';ctx.fillText(it.label,x+bw*.3,h-12);ctx.fillStyle='#eef3ff';ctx.fillText(it.v,x+bw*.3,Math.max(15,y-8))})}
+function renderStats(){let q=0,c=0,w=0;data.daily.forEach(x=>{q+=x.correct+x.wrong+x.blank;c+=x.correct;w+=x.wrong});$('allQ').textContent=q;$('allNet').textContent=fmt(net(c,w));$('recordDays').textContent=new Set(data.daily.map(x=>x.date)).size;$('examCount').textContent=data.exams.length;
+ let map={};data.daily.forEach(x=>{map[x.subject]=(map[x.subject]||0)+x.correct+x.wrong+x.blank});let entries=Object.entries(map).sort((a,b)=>b[1]-a[1]);$('subjectStats').innerHTML=entries.length?entries.map(([s,v])=>`<div style="margin:12px 0"><div class="record" style="padding:0;border:0"><span>${esc(s)}</span><b>${v} soru</b></div><div class="progress"><i style="width:${Math.max(2,v/Math.max(...entries.map(x=>x[1]))*100)}%"></i></div></div>`).join(''):'<div class="empty">İstatistik için henüz veri yok.</div>';
+ let exams=[...data.exams].sort((a,b)=>a.date.localeCompare(b.date)).slice(-10).map(x=>({label:x.date.slice(5),v:examNet(x)}));drawBars($('examChart'),exams.length?exams:[{label:'—',v:0}])}
+function renderCalendar(){let y=calDate.getFullYear(),m=calDate.getMonth();$('monthTitle').textContent=calDate.toLocaleDateString('tr-TR',{month:'long',year:'numeric'});let first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();let html=['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'].map(x=>`<div class="small" style="text-align:center">${x}</div>`).join('');for(let i=0;i<offset;i++)html+='<div></div>';for(let d=1;d<=days;d++){let key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,has=dailyFor(key).length,selected=$('calendarDetail').dataset.date===key;html+=`<button class="secondary" style="padding:10px 2px;${has?'border-color:#8b9cff;color:#fff':''};${selected?'background:#5265a8':''}" onclick="selectCalendar('${key}')">${d}${has?' •':''}</button>`}$('calendarGrid').innerHTML=html}
+function selectCalendar(key){let a=dailyFor(key);$('calendarDetail').dataset.date=key;$('calendarDetail').innerHTML=`<h2>${key} · ${a.length} kayıt</h2>`+(a.length?a.map(x=>`<div class="record"><div><b>${esc(x.subject)}</b><div class="small">${x.scope} · ${x.correct}D ${x.wrong}Y ${x.blank}B</div></div><b>${fmt(net(x.correct,x.wrong))} net</b></div>`).join(''):'<div class="empty">Bu tarihte kayıt yok.</div>');renderCalendar()}
+window.selectCalendar=selectCalendar;
+$('prevMonth').onclick=()=>{calDate.setMonth(calDate.getMonth()-1);renderCalendar()};$('nextMonth').onclick=()=>{calDate.setMonth(calDate.getMonth()+1);renderCalendar()};
+function renderAll(){renderHome();renderDaily();renderExams();if($('stats').classList.contains('active'))renderStats();if($('calendar').classList.contains('active'))renderCalendar()}
+$('goalInput').value=data.goal;$('dateInput').value=data.examDate;$('saveSettings').onclick=()=>{data.goal=Math.max(1,n($('goalInput').value));data.examDate=$('dateInput').value||'2027-06-20';save();alert('Ayarlar kaydedildi.')};
+$('exportBtn').onclick=()=>download('yks-2027-yedek.json',JSON.stringify(data,null,2),'application/json');
+function download(name,content,type){let a=document.createElement('a'),url=URL.createObjectURL(new Blob([content],{type}));a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+$('csvBtn').onclick=()=>{let rows=[['Tarih','Alan','Ders','Doğru','Yanlış','Boş','Net'],...data.daily.map(x=>[x.date,x.scope,x.subject,x.correct,x.wrong,x.blank,net(x.correct,x.wrong)])];let csv=rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n');download('yks-gunluk-kayitlar.csv','\ufeff'+csv,'text/csv;charset=utf-8')};
+$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!Array.isArray(x.daily)||!Array.isArray(x.exams))throw Error();if(!confirm('Mevcut kayıtların yedek dosyasındaki kayıtlarla değiştirilecek. Devam edilsin mi?'))return;data=x;save();$('goalInput').value=data.goal;$('dateInput').value=data.examDate;alert('Yedek başarıyla yüklendi.')}catch{alert('Dosya okunamadı veya yedek formatı geçersiz.')}e.target.value=''};
+$('clearAll').onclick=()=>{if(confirm('Tüm günlük kayıtlar ve denemeler kalıcı olarak silinsin mi?')){data={daily:[],exams:[],goal:150,examDate:'2027-06-20'};save();$('goalInput').value=150;$('dateInput').value=data.examDate}};
+$('themeBtn').onclick=()=>{document.body.classList.toggle('light');let light=document.body.classList.contains('light');document.documentElement.style.setProperty('--bg',light?'#f2f5fb':'#0b1020');document.documentElement.style.setProperty('--panel',light?'#fff':'#141c30');document.documentElement.style.setProperty('--text',light?'#172033':'#eef3ff');document.documentElement.style.setProperty('--muted',light?'#5c6880':'#9ba9c4');document.documentElement.style.setProperty('--line',light?'#d8dfec':'#293653');document.body.style.background=light?'#f2f5fb':'radial-gradient(ellipse at top left,#182445 0,#0b1020 42%)';document.querySelectorAll('.card').forEach(c=>c.style.background=light?'#fff':'')}
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+renderAll();
